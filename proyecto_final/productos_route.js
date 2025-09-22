@@ -1,12 +1,12 @@
 const express = require('express');
-const route = express.Router();
+const router = express.Router();
 const pool = require('../config/database');
 
 const authologin = require('../authomiddleware/autho_login');
 
 
 /*Obtener lista de Productos*/
-route.get('/productos',(req,res)=>{
+router.get('/productos',(req,res)=>{
     const sql= "Select * from Producto";
 
     pool.query(sql, (err,results) =>{
@@ -20,7 +20,7 @@ route.get('/productos',(req,res)=>{
 });
 
 /*Insertar Productos en tabla Producto*/
-route.post('/productos',authologin,(req,res) =>{
+router.post('/productos',authologin,(req,res) =>{
     const producto = req.body;
 
     if(producto.precio<0 || producto.stock<0){
@@ -41,7 +41,7 @@ route.post('/productos',authologin,(req,res) =>{
 });
 
 /*Actualizar Productos en tabla Producto*/
-route.put('/productos/:id',authologin,(req,res) =>{
+router.put('/productos/:id',authologin,(req,res) =>{
     const id = parseInt(req.params.id);
     const producto = req.body;
 
@@ -60,7 +60,7 @@ route.put('/productos/:id',authologin,(req,res) =>{
 });
 
 /*Eliminar Productos en tabla Producto*/
-route.delete('/productos/:id',authologin,(req,res) =>{
+router.delete('/productos/:id',authologin,(req,res) =>{
         const id = parseInt(req.params.id);
 
         const sql = 'delete from producto where id_producto = ?';
@@ -77,4 +77,4 @@ route.delete('/productos/:id',authologin,(req,res) =>{
         });
 });
 
-module.exports = route;
+module.exports = router;
