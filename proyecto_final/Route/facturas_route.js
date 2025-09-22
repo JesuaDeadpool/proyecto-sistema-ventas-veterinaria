@@ -4,9 +4,11 @@ const pool = require('../config/database');
 
 
 
-router.get('/facturas',(req,res)=>{
-    const sql= `Select v.id_venta,v.fecha,
-		
+router.get('/facturas/:id_venta',(req,res)=>{
+    const id= req.params.id_venta;
+
+    const sql= 
+    `Select v.id_venta,v.fecha,
 		d.nombre as NombreVeterinaria, d.telefono as VeterinariaTelefono,d.correo_electronico as Veterinaria_Correo,
         d.direccion as direccion, 
         
@@ -23,9 +25,12 @@ router.get('/facturas',(req,res)=>{
         Join Usuario u on v.id_usuario = u.id_usuario
 		Join DetalleVenta dv on dv.id_venta = v.id_venta
         Join Producto p on dv.id_producto = p.id_producto
-        Join DatosVeterinaria d on d.id_datos_veterinaria =1`;
+        Join DatosVeterinaria d on d.id_datos_veterinaria =1
+        Where v.id_venta=?
+        Order By v.id_venta, dv.id_detalle_venta`
+        ;
 
-    pool.query(sql,[1] ,(err,results) =>{
+    pool.query(sql,[id],(err,results) =>{
     if(err){
             res.status(500).json({status:500,message:'Error de Consulta',error:err.message});
         }

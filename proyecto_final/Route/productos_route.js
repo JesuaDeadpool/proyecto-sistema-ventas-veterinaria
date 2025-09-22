@@ -87,7 +87,6 @@ router.post('/ventas', (req, res) => {
     let procesados = 0;
 
     productos.forEach(producto => {
-
         const sql_precio_producto = "SELECT precio, stock FROM producto WHERE id_producto = ?";
 
         pool.query(sql_precio_producto, [producto.id_producto], (err, results) => {
@@ -109,9 +108,9 @@ router.post('/ventas', (req, res) => {
 
             if (procesados === productos.length) {
                 // Insertar Venta
-                const sql_venta = 'INSERT INTO Venta(id_usuario,id_cliente,fecha,total) VALUES (?,?,?,?)';
+                const sql_venta = 'INSERT INTO Venta(id_usuario,id_cliente,total) VALUES (?,?,?)';
 
-                pool.query(sql_venta, [ventas.id_usuario, ventas.id_cliente, ventas.fecha, total], (err, resultVenta) => {
+                pool.query(sql_venta, [ventas.id_usuario, ventas.id_cliente, total], (err, resultVenta) => {
                     if (err) {
                         return res.status(400).json({ status: 400, message: 'Error al registrar una venta' });
                     }
@@ -134,7 +133,6 @@ router.post('/ventas', (req, res) => {
                                 }
 
                                 detallesventas++;
-                                
                                 if (detallesventas === productos.length) {
                                     return res.status(200).json({ status: 200, message: 'Venta realizada exitosamente' });
                                 }
@@ -148,6 +146,18 @@ router.post('/ventas', (req, res) => {
 });
        
     
+// router.post('/ventas/:id_ventas',(req,req)=>{
+//         const id = req.params.id_ventas;
+
+//         const sql_registro_ventas=`Select v.id_venta,v.fecha, 
+// 			u.nombre as NombreUsuario, u.id_usuario as CodigoUsuario
+// 			from Venta v
+// 			Join Usuario u ON v.id_venta = u.id_usuario`
+
+        
+
+
+// });
     
 
 
