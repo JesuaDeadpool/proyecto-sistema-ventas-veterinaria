@@ -22,7 +22,6 @@ app.get('/api/gethash/:pass',async (req,res) =>{
         const pass =req.params.pass;
         const saltRound =10;
         const hash = await bcrypt.hash(pass,saltRound);
-
         res.status(200).json({status:200,message:'Exitosamente',data:hash});
 
 });

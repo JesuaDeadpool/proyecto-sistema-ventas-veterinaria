@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-
 const authologin = require('../authomiddleware/autho_login');
-
 
 /*Obtener lista de Productos*/
 router.get('/productos',(req,res)=>{
@@ -75,76 +73,85 @@ router.delete('/productos/:id',authologin,(req,res) =>{
         }
             return res.status(200).json({status:200, message:'Registro Eliminado Exitosamente'});
         });
+        
 });
+
 
 /* Creacion de una venta con detalles de productos, cantidades, y total*/
 
-router.post('/ventas',(req,res) =>{
-        const ventas = req.body;
-        const productos =ventas.productos
+router.post('/ventas', (req, res) => {
+    const ventas = req.body;
+    const productos = ventas.productos;
 
-        let total=0;
-        let subtotal=0;
-        
+    let total = 0;
+    let procesados = 0;
 
-        productos.forEach(producto => {
-           /* Consigo el precio de los productos vendidos*/
-            const sql_precio_producto="Select precio, stock from producto where id_producto=?"
+    productos.forEach(producto => {
 
-            pool.query(sql_precio_producto,[producto.id_producto],(err,results)=>{
+        const sql_precio_producto = "SELECT precio, stock FROM producto WHERE id_producto = ?";
 
-                if(err === results.length ===0){
-                    return res.status(400).json({status:400,message:'Producto no Encontrado'});
-                } 
-        });
-                
-        const precio = results[0].precio;
-        const stock = results[0].stock;
+        pool.query(sql_precio_producto, [producto.id_producto], (err, results) => {
+            if (err || results.length === 0) {
+                return res.status(400).json({ status: 400, message: 'Producto no encontrado' });
+            }
 
-        if (productos.cantidad > stock){
-            return res.status(400).json({status:400,message:'Stock insuficiente'});
-        }
+            const precio = results[0].precio;
+            const stock = results[0].stock;
 
-        ventas.total = ventas.cantidad * productos.precio;
-        
+            if (producto.cantidad > stock) {
+                return res.status(400).json({ status: 400, message: 'Stock insuficiente' });
+            }
+
+            producto.subtotal = precio * producto.cantidad;
+            total += producto.subtotal;
+            procesados++;
 
 
-        const sql_venta='Insert into Venta(id_usuario,id_cliente,fecha,total) values (?,?,?,?)';
-        
-            pool.query(sql_venta,[ventas.id_usuario,ventas.id_cliente,ventas.fecha,ventas.total],(err,results)=>{
+            if (procesados === productos.length) {
+                // Insertar Venta
+                const sql_venta = 'INSERT INTO Venta(id_usuario,id_cliente,fecha,total) VALUES (?,?,?,?)';
 
-                if(err){
-                    return res.status(400).json({status:400,message:'Error al obtener datos de venta'});
-                }
-
-            });  
-
-        
-    const sql_detalle_venta= 'Insert into DetalleVenta(id_venta,id_producto,cantidad,subtotal) values (?,?,?,?);';
-
-        pool.query(sql_detalle_venta, [detalleventa.id_venta,detalleventa.id_producto,detalleventa.cantidad,detalleventa.subtotal],(err,results)=>{
-
-                    if(err){
-                        return res.status(400).json({status:400,message:'Error al insertar datos de venta'});
+                pool.query(sql_venta, [ventas.id_usuario, ventas.id_cliente, ventas.fecha, total], (err, resultVenta) => {
+                    if (err) {
+                        return res.status(400).json({ status: 400, message: 'Error al registrar una venta' });
                     }
 
-            });
+                    const id_venta = resultVenta.insertId;
+                    let detallesventas = 0;
 
+                    productos.forEach(p => {
+                        const sql_detalle_venta = 'INSERT INTO DetalleVenta(id_venta,id_producto,cantidad,subtotal) VALUES (?,?,?,?)';
 
-        const sql_update_stock='Update Producto set stock=stock-? where id_producto=? and stock>=?';
-            
-             pool.query(sql_update_stock, [producto.stock,producto.id_producto],(err,results)=>{
+                        pool.query(sql_detalle_venta, [id_venta, p.id_producto, p.cantidad, p.subtotal], (err) => {
+                            if (err) {
+                                return res.status(400).json({ status: 400, message: 'Error al registrar detalles' });
+                            }
 
-                    if(err){
-                        return res.status(400).json({status:400,message:'Error al actualizar datos de stock'});
-                    }
-                    return res.status(200).json({status:200,message:'Stock actualizado exitosamente'});
-            });
-        
+                            const sql_update_stock = 'UPDATE Producto SET stock = stock - ? WHERE id_producto = ? AND stock >= ?';
+                            pool.query(sql_update_stock, [p.cantidad, p.id_producto, p.cantidad], (err) => {
+                                if (err) {
+                                    return res.status(400).json({ status: 400, message: 'Error al actualizar stock' });
+                                }
+
+                                detallesventas++;
+                                
+                                if (detallesventas === productos.length) {
+                                    return res.status(200).json({ status: 200, message: 'Venta realizada exitosamente' });
+                                }
+                            });
+                        });
+                    });
+                });
+            }
         });
-        
+    });
 });
+       
+    
+    
 
+
+                
 
 
 module.exports = router;
