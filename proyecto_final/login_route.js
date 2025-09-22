@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const route = express.Router();
+const router = express.Router();
 const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
 const bcrypt = require('bcrypt');
@@ -8,7 +8,7 @@ const authologin = require('../authomiddleware/autho_login');
 
 
 
-route.post('/login', async (req, res)=>{
+router.post('/login', async (req, res)=>{
     const usuario = req.body;
 
     if(!usuario.nombre || !usuario.correo_electronico || !usuario.contraseña){
@@ -46,7 +46,7 @@ route.post('/login', async (req, res)=>{
 });
 
 
-route.post('/usuarios',async (req,res)=>{
+router.post('/usuarios',async (req,res)=>{
         const usuario = req.body;
        
         if (!usuario.nombre || !usuario.correo_electronico || !usuario.contraseña){
