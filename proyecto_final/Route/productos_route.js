@@ -146,18 +146,27 @@ router.post('/ventas', (req, res) => {
 });
        
     
-// router.post('/ventas/:id_ventas',(req,req)=>{
-//         const id = req.params.id_ventas;
+router.get('/ventas/:id_ventas',(req,res)=>{
+        const id = req.params.id_ventas;
 
-//         const sql_registro_ventas=`Select v.id_venta,v.fecha, 
-// 			u.nombre as NombreUsuario, u.id_usuario as CodigoUsuario
-// 			from Venta v
-// 			Join Usuario u ON v.id_venta = u.id_usuario`
+        const sql_registro_ventas=`Select v.id_venta,v.fecha, 
+			u.nombre as NombreUsuario, u.id_usuario as CodigoUsuario
+			from Venta v
+			Join Usuario u ON v.id_usuario = u.id_usuario
+            where v.id_venta= ?`
 
-        
+        pool.query(sql_registro_ventas,[id],(err,results) =>{
 
+                if(err){
+                    return res.status(400).json({status:400,message:'Error al obtener registro de ventas..'});
+                }
+                if (results.length === 0) {
+                return res.status(404).json({ status: 404, message: 'Venta no encontrada' });
+                }
 
-// });
+                return res.status(200).json({status:200,message:'Registro de venta exitoso',venta:results[0]});
+        });     
+});
     
 
 
